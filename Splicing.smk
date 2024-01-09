@@ -17,7 +17,8 @@ rule all:
         expand('/home/workspace/jogrady/bovinesQTL/results/RNA-seq/leafcutter_output/{group}.leafcutter.bed.gz', group = config["groups"]),
         expand("/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}_splice.cis_qtl.txt.gz", group = config["groups"]),
         expand("/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}.cis_qtl_pairs.{chrn}.txt.gz",  group = config["groups"], chrn=autosomes),
-        expand("/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}_splice.cis_independent_qtl.txt.gz", group = config["groups"])
+        #expand("/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}_splice.cis_independent_qtl.txt.gz", group = config["groups"]) # conditional
+        expand("/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}.cis_sqtl_fdr0.05.txt", group = config["groups"])
 
 rule Alignment:
     input:
@@ -292,4 +293,15 @@ rule sqtl_mapping_conditional:
         --groups {input.phenotype_groups} \
         --cis_output {input.cis} \
         --mode cis_independent
+        '''
+
+rule eGenedetection:
+    input:
+        eqtl_permute="/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}_splice.cis_qtl.txt.gz", # Phenotypes
+        script="/home/workspace/jogrady/bovinesQTL/bin/eGene_detection.R"
+    output:
+        eGenes= "/home/workspace/jogrady/bovinesQTL/results/RNA-seq/sQTL/{group}.cis_sqtl_fdr0.05.txt"
+    shell:
+        '''
+        Rscript {input.script} {input.eqtl_permute} {output.eGenes} 0.05 # FDR
         '''
